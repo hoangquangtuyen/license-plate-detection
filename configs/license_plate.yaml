@@ -1,0 +1,8 @@
+path: D:/hihi/archive/datasets
+
+train: train/images
+val: val/images
+test: test/images
+
+nc: 1
+names: ['license_plate']
