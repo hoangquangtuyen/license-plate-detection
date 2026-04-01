@@ -9,27 +9,23 @@ YOLOV5_DIR = ROOT / "yolov5"
 CONFIG = (ROOT / "configs" / "license_plate.yaml").resolve()
 
 # ── Google Drive ──────────────────────────────────────────────────────────────
-# Thư mục lưu weights trên Drive sau khi train xong.
-# Thay đổi đường dẫn nếu muốn lưu vào thư mục khác.
 DRIVE_SAVE_DIR = Path("/content/drive/MyDrive/license_plate_weights")
 
 
 def mount_drive():
-    """Mount Google Drive (chỉ chạy được trên Colab)."""
-    try:
-        from google.colab import drive
-        drive.mount("/content/drive")
-        print("✅ Đã mount Google Drive\n")
+    """Kiểm tra Drive đã mount chưa — KHÔNG tự gọi drive.mount()."""
+    if Path("/content/drive").exists():
+        print("✅ Drive đã được mount sẵn\n")
         return True
-    except ImportError:
-        print("⚠️  Không phải môi trường Colab, bỏ qua bước mount Drive.\n")
-        return False
+    print("⚠️  Drive chưa mount, weights sẽ lưu local trong session.\n")
+    return False
 
 
 def save_weights_to_drive(exp_names):
     """Sao chép file best.pt của từng thí nghiệm lên Google Drive."""
     if not Path("/content/drive").exists():
-        print("⚠️  Drive chưa được mount, bỏ qua bước lưu weights.\n")
+        print("⚠️  Drive chưa mount, bỏ qua bước lưu weights lên Drive.")
+        print(f"   Weights vẫn còn trong session tại: {ROOT / 'runs/train'}\n")
         return
 
     DRIVE_SAVE_DIR.mkdir(parents=True, exist_ok=True)
@@ -95,7 +91,6 @@ if __name__ == "__main__":
     parser.add_argument("--device",   type=str, default="0")
     args = parser.parse_args()
 
-    # Mount Drive trước khi train để sẵn sàng lưu sau
     mount_drive()
 
     # 4 thí nghiệm theo đề cương: so sánh YOLOv5s/m x Augmentation/Không
@@ -127,15 +122,13 @@ if __name__ == "__main__":
             results.append((name, f"❌ Lỗi: {e}"))
             print(f"⚠️  Thí nghiệm {name} thất bại, tiếp tục thí nghiệm tiếp theo...\n")
 
-    # Lưu toàn bộ weights lên Drive sau khi train xong
     save_weights_to_drive(success_names)
 
-    # Tổng kết
     print(f"\n{'='*60}")
     print("📊 TỔNG KẾT 4 THÍ NGHIỆM")
     print(f"{'='*60}")
     for name, status in results:
         print(f"  {status}  {name}")
-    print(f"\n💡 Kết quả train : {ROOT / 'runs/train'}")
-    print(f"💾 Weights trên Drive: {DRIVE_SAVE_DIR}")
+    print(f"\n💡 Kết quả train  : {ROOT / 'runs/train'}")
+    print(f"💾 Weights Drive  : {DRIVE_SAVE_DIR}")
     print(f"{'='*60}\n")
