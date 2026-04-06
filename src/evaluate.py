@@ -2,7 +2,7 @@ import pandas as pd
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-RUNS = ROOT / "runs/train"
+RUNS = ROOT / "run"
 
 
 def load(run):
@@ -16,19 +16,21 @@ def load(run):
 
 
 def get_metrics(df):
-    col_p   = "metrics/precision(B)"
-    col_r   = "metrics/recall(B)"
-    col_map = "metrics/mAP_0.5(B)"
+    col_p     = "   metrics/precision"
+    col_r     = "      metrics/recall"
+    col_map   = "     metrics/mAP_0.5"
+    col_map95 = "metrics/mAP_0.5:0.95"
 
     best = df.loc[df[col_map].idxmax()]
 
     precision = best[col_p]
     recall    = best[col_r]
     map50     = best[col_map]
+    map5095   = best[col_map95]
 
     f1 = 2 * precision * recall / (precision + recall + 1e-6)
 
-    return precision, recall, f1, map50
+    return precision, recall, f1, map50, map5095
 
 
 def compare(runs):
@@ -42,14 +44,15 @@ def compare(runs):
             continue
 
         try:
-            p, rcl, f1, map50 = get_metrics(df)
+            p, rcl, f1, map50, map5095 = get_metrics(df)
 
             results.append({
-                "Model":     run_name,
-                "Precision": round(p,     4),
-                "Recall":    round(rcl,   4),
-                "F1-score":  round(f1,    4),
-                "mAP@0.5":   round(map50, 4),
+                "Model":       run_name,
+                "Precision":   round(p,     4),
+                "Recall":      round(rcl,   4),
+                "F1-score":    round(f1,    4),
+                "mAP@0.5":     round(map50, 4),
+                "mAP@0.5:0.95": round(map5095, 4),
             })
 
         except Exception as e:
